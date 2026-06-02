@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>丰云世紀訂購後台</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4efe7;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: #2c241d;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 12px 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #5a3a20;
+      margin: 8px 0 18px;
+      font-size: 28px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+      margin-bottom: 16px;
+    }
+
+    .login-box {
+      max-width: 420px;
+      margin: 60px auto;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cdbda8;
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fffdf8;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: #7b5538;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.secondary {
+      background: #546e7a;
+    }
+
+    button.shipped {
+      background: #2e7d32;
+    }
+
+    button.unshipped {
+      background: #a94442;
+    }
+
+    .login-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px;
+      font-size: 17px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .msg {
+      display: none;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .msg.success {
+      display: block;
+      background: #e8f5e9;
+      color: #1b5e20;
+    }
+
+    .msg.error {
+      display: block;
+      background: #ffebee;
+      color: #b71c1c;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1500px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #eadfce;
+      padding: 8px;
+      vertical-align: top;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #6d4a2f;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    tr:nth-child(even) {
+      background: #fffaf2;
+    }
+
+    .small-input {
+      width: 100px;
+      padding: 7px;
+    }
+
+    .medium-input {
+      width: 140px;
+      padding: 7px;
+    }
+
+    .status-select {
+      width: 110px;
+      padding: 7px;
+    }
+
+    .track-btn {
+      display: inline-block;
+      background: #1565c0;
+      color: #fff;
+      padding: 6px 9px;
+      border-radius: 7px;
+      text-decoration: none;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .product-list {
+      line-height: 1.7;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .filters {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <h1>丰云世紀訂購後台</h1>
+
+    <div id="loginBox" class="card login-box">
+      <label for="password">後台密碼</label>
+      <input type="password" id="password" placeholder="請輸入後台密碼">
+      <button class="login-btn" onclick="login()">登入後台</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <div id="adminBox" class="hidden">
+      <div class="card">
+        <div class="toolbar">
+          <button onclick="loadOrders()">重新整理訂單</button>
+          <button class="secondary" onclick="logout()">登出</button>
+        </div>
+
+        <div class="filters">
+          <div>
+            <label>訂購日期</label>
+            <input type="date" id="filterDate" onchange="renderOrders()">
+          </div>
+
+          <div>
+            <label>訂購人姓名</label>
+            <input type="text" id="filterName" oninput="renderOrders()" placeholder="輸入姓名搜尋">
+          </div>
+
+          <div>
+            <label>收款方式</label>
+            <select id="filterPayment" onchange="renderOrders()">
+              <option value="">全部</option>
+              <option value="未收款">未付款</option>
+              <option value="已收款">已付款</option>
+              <option value="貨到付款">貨到付款</option>
+            </select>
+          </div>
+
+          <div>
+            <label>出貨狀態</label>
+            <select id="filterShipping" onchange="renderOrders()">
+              <option value="">全部</option>
+              <option value="未寄出">未寄出</option>
+              <option value="已寄出">已寄出</option>
+            </select>
+          </div>
+
+          <div>
+            <label>&nbsp;</label>
+            <button onclick="clearFilters()">清除篩選</button>
+          </div>
+        </div>
+
+        <div id="adminMsg" class="msg"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>訂單時間</th>
+              <th>訂購人</th>
+              <th>手機</th>
+              <th>收件地址</th>
+              <th>產品數量</th>
+              <th>售價</th>
+              <th>收款方式</th>
+              <th>出貨狀態</th>
+              <th>物流編碼</th>
+              <th>發票號碼</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="orderBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec';
+
+    const PRODUCTS = [
+      '樟芝',
+      '百益菌',
+      '蓉益循',
+      '塘益淨',
+      '白樺茸',
+      '視益明',
+      '固益伸',
+      '武澤罡',
+      '丰益寶',
+      '活氧肽',
+      '丰益醇'
+    ];
+
+    let ADMIN_PASSWORD = '';
+    let ALL_ORDERS = [];
+
+    function showMsg(id, type, text) {
+      const el = document.getElementById(id);
+      el.className = 'msg ' + type;
+      el.textContent = text;
+    }
+
+    function jsonp(url, callbackName) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        const cb = callbackName || ('cb_' + Date.now() + '_' + Math.floor(Math.random() * 9999));
+
+        window[cb] = function(data) {
+          resolve(data);
+          delete window[cb];
+          script.remove();
+        };
+
+        script.onerror = function() {
+          reject(new Error('連線失敗'));
+          delete window[cb];
+          script.remove();
+        };
+
+        script.src = url + '&callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function login() {
+      const password = document.getElementById('password').value.trim();
+
+      if (!password) {
+        showMsg('loginMsg', 'error', '請輸入後台密碼');
+        return;
+      }
+
+      ADMIN_PASSWORD = password;
+
+      const params = new URLSearchParams();
+      params.set('action', 'getOrders');
+      params.set('password', ADMIN_PASSWORD);
+
+      try {
+        const data = await jsonp(GAS_URL + '?' + params.toString());
+
+        if (!data.success) {
+          showMsg('loginMsg', 'error', data.message || '登入失敗');
+          return;
+        }
+
+        ALL_ORDERS = data.orders || [];
+        localStorage.setItem('fengyun_admin_password', ADMIN_PASSWORD);
+
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('adminBox').classList.remove('hidden');
+
+        renderOrders();
+
+      } catch (err) {
+        showMsg('loginMsg', 'error', String(err.message || err));
+      }
+    }
+
+    async function loadOrders() {
+      const params = new URLSearchParams();
+      params.set('action', 'getOrders');
+      params.set('password', ADMIN_PASSWORD);
+
+      showMsg('adminMsg', 'success', '讀取訂單中...');
+
+      try {
+        const data = await jsonp(GAS_URL + '?' + params.toString());
+
+        if (!data.success) {
+          showMsg('adminMsg', 'error', data.message || '讀取失敗');
+          return;
+        }
+
+        ALL_ORDERS = data.orders || [];
+        showMsg('adminMsg', 'success', '訂單已更新');
+        renderOrders();
+
+      } catch (err) {
+        showMsg('adminMsg', 'error', String(err.message || err));
+      }
+    }
+
+    function logout() {
+      ADMIN_PASSWORD = '';
+      ALL_ORDERS = [];
+      localStorage.removeItem('fengyun_admin_password');
+      document.getElementById('password').value = '';
+      document.getElementById('loginBox').classList.remove('hidden');
+      document.getElementById('adminBox').classList.add('hidden');
+    }
+
+    function clearFilters() {
+      document.getElementById('filterDate').value = '';
+      document.getElementById('filterName').value = '';
+      document.getElementById('filterPayment').value = '';
+      document.getElementById('filterShipping').value = '';
+      renderOrders();
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById('orderBody');
+      tbody.innerHTML = '';
+
+      const filterDate = document.getElementById('filterDate').value;
+      const filterName = document.getElementById('filterName').value.trim();
+      const filterPayment = document.getElementById('filterPayment').value;
+      const filterShipping = document.getElementById('filterShipping').value;
+
+      const filtered = ALL_ORDERS.filter(order => {
+        const orderTime = order['訂單時間'] || '';
+        const orderDate = normalizeDate(orderTime);
+        const name = order['訂購人姓名'] || '';
+        const payment = order['收款方式'] || '';
+        const shipping = order['出貨狀態'] || '';
+
+        if (filterDate && orderDate !== filterDate) return false;
+        if (filterName && name.indexOf(filterName) === -1) return false;
+        if (filterPayment && payment !== filterPayment) return false;
+        if (filterShipping && shipping !== filterShipping) return false;
+
+        return true;
+      });
+
+      filtered.forEach(order => {
+        const tr = document.createElement('tr');
+        const rowNumber = order.rowNumber;
+
+        const productsHtml = PRODUCTS
+          .filter(product => order[product])
+          .map(product => `${product}：${order[product]}`)
+          .join('<br>');
+
+        const logisticsCode = order['物流編碼'] || '';
+        const trackUrl = logisticsCode
+          ? `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(logisticsCode)}`
+          : '';
+
+        const shippingStatus = order['出貨狀態'] || '未寄出';
+
+        tr.innerHTML = `
+          <td>${escapeHtml(order['訂單時間'] || '')}</td>
+          <td>${escapeHtml(order['訂購人姓名'] || '')}</td>
+          <td>${escapeHtml(order['手機號碼'] || '')}</td>
+          <td>${escapeHtml(order['收件地址'] || '')}</td>
+          <td class="product-list">${productsHtml || '-'}</td>
+
+          <td>
+            <input class="small-input" type="text" id="price_${rowNumber}" value="${escapeAttr(order['售價'] || '')}">
+          </td>
+
+          <td>
+            <select class="status-select" id="payment_${rowNumber}">
+              <option value="未收款" ${order['收款方式'] === '未收款' ? 'selected' : ''}>未收款</option>
+              <option value="已收款" ${order['收款方式'] === '已收款' ? 'selected' : ''}>已收款</option>
+              <option value="貨到付款" ${order['收款方式'] === '貨到付款' ? 'selected' : ''}>貨到付款</option>
+            </select>
+          </td>
+
+          <td>
+            <button
+              id="shippingBtn_${rowNumber}"
+              class="${shippingStatus === '已寄出' ? 'shipped' : 'unshipped'}"
+              onclick="toggleShipping(${rowNumber})"
+              data-status="${shippingStatus}"
+            >${shippingStatus}</button>
+          </td>
+
+          <td>
+            <input class="medium-input" type="text" id="logistics_${rowNumber}" value="${escapeAttr(logisticsCode)}">
+            <div id="trackBox_${rowNumber}">
+              ${
+                trackUrl
+                  ? `<a class="track-btn" href="${trackUrl}" target="_blank">查詢物流</a>`
+                  : ''
+              }
+            </div>
+          </td>
+
+          <td>
+            <input class="medium-input" type="text" id="invoice_${rowNumber}" value="${escapeAttr(order['發票號碼'] || '')}">
+          </td>
+
+          <td>
+            <button onclick="saveOrder(${rowNumber})">儲存</button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toggleShipping(rowNumber) {
+      const btn = document.getElementById('shippingBtn_' + rowNumber);
+      const current = btn.dataset.status || '未寄出';
+      const next = current === '已寄出' ? '未寄出' : '已寄出';
+
+      btn.dataset.status = next;
+      btn.textContent = next;
+      btn.className = next === '已寄出' ? 'shipped' : 'unshipped';
+    }
+
+    async function saveOrder(rowNumber) {
+      const price = document.getElementById('price_' + rowNumber).value.trim();
+      const paymentStatus = document.getElementById('payment_' + rowNumber).value;
+      const shippingStatus = document.getElementById('shippingBtn_' + rowNumber).dataset.status || '未寄出';
+      const logisticsCode = document.getElementById('logistics_' + rowNumber).value.trim();
+      const invoiceNo = document.getElementById('invoice_' + rowNumber).value.trim();
+
+      const params = new URLSearchParams();
+      params.set('action', 'updateOrder');
+      params.set('password', ADMIN_PASSWORD);
+      params.set('rowNumber', rowNumber);
+      params.set('price', price);
+      params.set('paymentStatus', paymentStatus);
+      params.set('shippingStatus', shippingStatus);
+      params.set('logisticsCode', logisticsCode);
+      params.set('invoiceNo', invoiceNo);
+
+      showMsg('adminMsg', 'success', '儲存中...');
+
+      try {
+        const data = await jsonp(GAS_URL + '?' + params.toString());
+
+        if (!data.success) {
+          showMsg('adminMsg', 'error', data.message || '儲存失敗');
+          return;
+        }
+
+        showMsg('adminMsg', 'success', '已儲存');
+
+        const trackBox = document.getElementById('trackBox_' + rowNumber);
+        if (logisticsCode) {
+          const trackUrl = `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(logisticsCode)}`;
+          trackBox.innerHTML = `<a class="track-btn" href="${trackUrl}" target="_blank">查詢物流</a>`;
+        } else {
+          trackBox.innerHTML = '';
+        }
+
+        await loadOrders();
+
+      } catch (err) {
+        showMsg('adminMsg', 'error', String(err.message || err));
+      }
+    }
+
+    function normalizeDate(text) {
+      if (!text) return '';
+
+      const match = String(text).match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+
+      if (!match) return '';
+
+      const y = match[1];
+      const m = String(match[2]).padStart(2, '0');
+      const d = String(match[3]).padStart(2, '0');
+
+      return `${y}-${m}-${d}`;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(text) {
+      return escapeHtml(text);
+    }
+
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('fengyun_admin_password');
+
+      if (saved) {
+        document.getElementById('password').value = saved;
+        login();
+      }
+    });
+  </script>
+</body>
+</html>
