@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>丰云世紀訂購表</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f6f1e8;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: #2f261d;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
+
+    .banner {
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      background: #fff;
+    }
+
+    .banner img {
+      width: 100%;
+      display: block;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 20px 16px 24px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: 26px;
+      text-align: center;
+      letter-spacing: 1px;
+      color: #5a3a20;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #3a2a1f;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 13px 12px;
+      border: 1px solid #cdbda8;
+      border-radius: 10px;
+      font-size: 17px;
+      outline: none;
+      background: #fffdf8;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #9f7145;
+      box-shadow: 0 0 0 3px rgba(159,113,69,0.12);
+    }
+
+    .section-title {
+      margin: 22px 0 12px;
+      padding: 10px 12px;
+      background: #6d4a2f;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .product-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee2d3;
+    }
+
+    .product-name {
+      flex: 1;
+      font-size: 18px;
+      font-weight: 700;
+      color: #35261b;
+    }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .qty-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      line-height: 40px;
+      background: #7b5538;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .qty-input {
+      width: 60px;
+      height: 42px;
+      text-align: center;
+      border: 1px solid #cdbda8;
+      border-radius: 9px;
+      font-size: 18px;
+      background: #fffdf8;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: #7b5538;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      background: #b8a99b;
+      cursor: not-allowed;
+    }
+
+    .msg {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: center;
+      display: none;
+    }
+
+    .msg.success {
+      background: #e8f5e9;
+      color: #1b5e20;
+      display: block;
+    }
+
+    .msg.error {
+      background: #ffebee;
+      color: #b71c1c;
+      display: block;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #75675c;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="banner">
+      <img src="https://fyc100.com/20210330.jpg" alt="丰云世紀訂購表">
+    </div>
+
+    <div class="card">
+      <h1>丰云世紀訂購表</h1>
+
+      <div class="field">
+        <label for="name">訂購人姓名</label>
+        <input type="text" id="name" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="phone">手機號碼</label>
+        <input type="text" id="phone" inputmode="tel" autocomplete="tel">
+      </div>
+
+      <div class="field">
+        <label for="address">收件地址</label>
+        <textarea id="address"></textarea>
+      </div>
+
+      <div class="section-title">產品數量</div>
+
+      <div id="productList"></div>
+
+      <div class="note">
+        數量未選擇的產品，系統不會列入訂單。
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submitOrder()">送出訂單</button>
+
+      <div id="msg" class="msg"></div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec';
+
+    const PRODUCTS = [
+      '樟芝',
+      '百益菌',
+      '蓉益循',
+      '塘益淨',
+      '白樺茸',
+      '視益明',
+      '固益伸',
+      '武澤罡',
+      '丰益寶',
+      '活氧肽',
+      '丰益醇'
+    ];
+
+    function initProducts() {
+      const wrap = document.getElementById('productList');
+
+      PRODUCTS.forEach(product => {
+        const row = document.createElement('div');
+        row.className = 'product-row';
+
+        row.innerHTML = `
+          <div class="product-name">${product}</div>
+          <div class="qty-control">
+            <button type="button" class="qty-btn" onclick="changeQty('${product}', -1)">−</button>
+            <input type="text" class="qty-input" id="qty_${product}" value="" readonly>
+            <button type="button" class="qty-btn" onclick="changeQty('${product}', 1)">＋</button>
+          </div>
+        `;
+
+        wrap.appendChild(row);
+      });
+    }
+
+    function changeQty(product, delta) {
+      const input = document.getElementById('qty_' + product);
+      let value = input.value === '' ? 0 : Number(input.value);
+
+      value += delta;
+
+      if (value <= 0) {
+        input.value = '';
+        return;
+      }
+
+      if (value > 99) {
+        value = 99;
+      }
+
+      input.value = value;
+    }
+
+    function showMsg(type, text) {
+      const msg = document.getElementById('msg');
+      msg.className = 'msg ' + type;
+      msg.textContent = text;
+    }
+
+    function jsonp(url, callbackName) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        const cb = callbackName || ('cb_' + Date.now() + '_' + Math.floor(Math.random() * 9999));
+
+        window[cb] = function(data) {
+          resolve(data);
+          delete window[cb];
+          script.remove();
+        };
+
+        script.onerror = function() {
+          reject(new Error('連線失敗'));
+          delete window[cb];
+          script.remove();
+        };
+
+        script.src = url + '&callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function submitOrder() {
+      const btn = document.getElementById('submitBtn');
+
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+
+      if (!name) {
+        showMsg('error', '請填寫訂購人姓名');
+        return;
+      }
+
+      if (!phone) {
+        showMsg('error', '請填寫手機號碼');
+        return;
+      }
+
+      if (!address) {
+        showMsg('error', '請填寫收件地址');
+        return;
+      }
+
+      let hasQty = false;
+      const params = new URLSearchParams();
+
+      params.set('action', 'submitOrder');
+      params.set('name', name);
+      params.set('phone', phone);
+      params.set('address', address);
+
+      PRODUCTS.forEach(product => {
+        const qty = document.getElementById('qty_' + product).value.trim();
+        params.set(product, qty);
+
+        if (qty && Number(qty) > 0) {
+          hasQty = true;
+        }
+      });
+
+      if (!hasQty) {
+        showMsg('error', '請至少選擇一項產品數量');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '訂單送出中...';
+      showMsg('success', '訂單送出中，請稍候');
+
+      try {
+        const data = await jsonp(GAS_URL + '?' + params.toString());
+
+        if (data.success) {
+          showMsg('success', data.message || '訂單已送出，我們將盡快與您聯繫');
+          clearForm();
+        } else {
+          showMsg('error', data.message || '送出失敗');
+        }
+
+      } catch (err) {
+        showMsg('error', String(err.message || err));
+      }
+
+      btn.disabled = false;
+      btn.textContent = '送出訂單';
+    }
+
+    function clearForm() {
+      document.getElementById('name').value = '';
+      document.getElementById('phone').value = '';
+      document.getElementById('address').value = '';
+
+      PRODUCTS.forEach(product => {
+        document.getElementById('qty_' + product).value = '';
+      });
+    }
+
+    initProducts();
+  </script>
+</body>
+</html>
