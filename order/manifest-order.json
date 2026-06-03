@@ -1,15 +1,15 @@
 {
-  "id": "https://fyc100.com/order",
+  "id": "/order/",
   "name": "丰云世紀訂購表",
   "short_name": "丰云訂購",
-  "start_url": "https://fyc100.com/order",
-  "scope": "https://fyc100.com/order",
+  "start_url": "/order/",
+  "scope": "/order/",
   "display": "standalone",
   "background_color": "#f6f1e8",
   "theme_color": "#7b5538",
   "icons": [
     {
-      "src": "https://fyc100.com/order-logo.png",
+      "src": "/order/order-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
