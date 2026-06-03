@@ -381,15 +381,18 @@
 
         const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
 
-        const formData = new FormData();
-        formData.append('action', 'uploadPickupImage');
-        formData.append('password', ADMIN_PASSWORD);
-        formData.append('rowNumber', rowNumber);
-        formData.append('imageBase64', imageBase64);
+        const body = new URLSearchParams();
+        body.append('action', 'uploadPickupImage');
+        body.append('password', ADMIN_PASSWORD);
+        body.append('rowNumber', rowNumber);
+        body.append('imageBase64', imageBase64);
 
         await fetch(GAS_URL, {
           method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+          },
+          body: body.toString(),
           mode: 'no-cors'
         });
 
