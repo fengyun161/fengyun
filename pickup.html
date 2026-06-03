@@ -381,17 +381,21 @@ async function submitPickup() {
 
         const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
 
-        // === 【修正重點】改用 URLSearchParams 封裝，並改走 JSONP 機制 ===
-        const params = new URLSearchParams();
-        params.set('action', 'uploadPickupImage');
-        params.set('password', ADMIN_PASSWORD);
-        params.set('rowNumber', rowNumber);
-        
-        // 注意：因為 Base64 字串很長，必須確實進行 URL 編碼
-        params.set('imageBase64', imageBase64);
+        // === 改用 FormData 封裝大體積圖片資料 ===
+        const payload = {
+          action: 'uploadPickupImage',
+          password: ADMIN_PASSWORD,
+          rowNumber: rowNumber,
+          imageBase64: imageBase64
+        };
 
-        // 改用 jsonp 函式發送 GET 請求，觸發後端的 doGet
-        const data = await jsonp(GAS_URL + '?' + params.toString());
+        // === 正確的 POST 傳送方式，不使用 no-cors 避免被擋 ===
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
 
         if (data.success) {
           showMsg('success', '提貨單已成功送出！試算表已完成回填。');
