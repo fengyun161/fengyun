@@ -177,6 +177,15 @@
     <div id="msg" class="msg"></div>
   </div>
 
+  <form id="uploadForm" method="post" action="https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec" target="hiddenFrame" style="display:none;">
+    <input type="hidden" name="action" value="uploadPickupImage">
+    <input type="hidden" name="password" id="formPassword">
+    <input type="hidden" name="rowNumber" id="formRowNumber">
+    <input type="hidden" name="imageBase64" id="formImageBase64">
+  </form>
+
+  <iframe name="hiddenFrame" style="display:none;"></iframe>
+
   <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec';
     const ADMIN_PASSWORD = localStorage.getItem('fengyun_admin_password') || '8888';
@@ -362,7 +371,7 @@
       isSigned = false;
     }
 
-async function submitPickup() {
+    async function submitPickup() {
       if (!isSigned) {
         showMsg('error', '請先完成電子簽名');
         return;
@@ -381,27 +390,13 @@ async function submitPickup() {
 
         const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
 
-        // === 改用 FormData 封裝大體積圖片資料 ===
-        const payload = {
-          action: 'uploadPickupImage',
-          password: ADMIN_PASSWORD,
-          rowNumber: rowNumber,
-          imageBase64: imageBase64
-        };
+        document.getElementById('formPassword').value = ADMIN_PASSWORD;
+        document.getElementById('formRowNumber').value = rowNumber;
+        document.getElementById('formImageBase64').value = imageBase64;
 
-        // === 正確的 POST 傳送方式，不使用 no-cors 避免被擋 ===
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
+        document.getElementById('uploadForm').submit();
 
-        const data = await response.json();
-
-        if (data.success) {
-          showMsg('success', '提貨單已成功送出！試算表已完成回填。');
-        } else {
-          showMsg('error', '後端儲存失敗：' + (data.message || '未知錯誤'));
-        }
+        showMsg('success', '提貨單已送出，請回後台重新整理確認提貨單圖片網址');
 
         setTimeout(function() {
           btn.disabled = false;
@@ -409,7 +404,7 @@ async function submitPickup() {
         }, 3000);
 
       } catch (err) {
-        showMsg('error', '傳送失敗：' + String(err.message || err));
+        showMsg('error', String(err.message || err));
         btn.disabled = false;
         btn.textContent = '送出提貨單';
       }
