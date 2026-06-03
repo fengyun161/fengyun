@@ -143,10 +143,11 @@
       <h1>丰云世紀電子提貨單</h1>
 
       <div class="info">
-        <div><strong>訂單時間：</strong><span id="orderTime"></span></div>
-        <div><strong>提貨人姓名：</strong><span id="name"></span></div>
-        <div><strong>手機號碼：</strong><span id="phone"></span></div>
-        <div><strong>取貨方式：</strong>自取</div>
+<div><strong>訂購時間：</strong><span id="orderTime"></span></div>
+<div><strong>提貨時間：</strong><span id="pickupTime"></span></div>
+<div><strong>提貨人姓名：</strong><span id="name"></span></div>
+<div><strong>手機號碼：</strong><span id="phone"></span></div>
+<div><strong>取貨方式：</strong>自取</div>
       </div>
 
       <div class="section-title">出貨明細</div>
@@ -211,6 +212,19 @@
       return url.searchParams.get(name) || '';
     }
 
+    function formatPickupTime() {
+  const now = new Date();
+
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const h = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+
+  return `${y}/${m}/${d} ${h}:${min}:${s}`;
+}
+
     function jsonp(url, callbackName) {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -262,9 +276,12 @@
 
         const order = data.order;
 
-        document.getElementById('orderTime').textContent = order['訂單時間'] || '';
-        document.getElementById('name').textContent = order['訂購人姓名'] || '';
-        document.getElementById('phone').textContent = order['手機號碼'] || '';
+        
+
+document.getElementById('orderTime').textContent = order['訂單時間'] || '';
+document.getElementById('pickupTime').textContent = formatPickupTime();
+document.getElementById('name').textContent = order['訂購人姓名'] || '';
+document.getElementById('phone').textContent = order['手機號碼'] || '';
 
         const tbody = document.getElementById('productBody');
         tbody.innerHTML = '';
