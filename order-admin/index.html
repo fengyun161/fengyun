@@ -509,7 +509,8 @@
           <td>
             <select class="status-select" id="payment_${rowNumber}">
               <option value="未收款" ${order['收款方式'] === '未收款' ? 'selected' : ''}>未收款</option>
-              <option value="已收款" ${order['收款方式'] === '已收款' ? 'selected' : ''}>已收款</option>
+              <option value="現金" ${order['收款方式'] === '現金' ? 'selected' : ''}>現金</option>
+              <option value="刷卡" ${order['收款方式'] === '刷卡' ? 'selected' : ''}>刷卡</option>
               <option value="貨到付款" ${order['收款方式'] === '貨到付款' ? 'selected' : ''}>貨到付款</option>
             </select>
           </td>
