@@ -2,7 +2,7 @@
   "id": "fengyun-admin",
   "name": "丰云世紀訂購後台",
   "short_name": "丰云後台",
-  "start_url": "./admin.html",
+  "start_url": "./order-admin.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4efe7",
