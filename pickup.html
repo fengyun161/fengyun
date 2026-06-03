@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>丰云世紀電子提貨單</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f6f1e8;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      color: #2f261d;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .receipt {
+      background: #fff;
+      border: 2px solid #7b5538;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      text-align: center;
+      color: #5a3a20;
+      margin: 0 0 18px;
+      font-size: 28px;
+    }
+
+    .info {
+      margin-bottom: 18px;
+      line-height: 1.9;
+      font-size: 17px;
+    }
+
+    .section-title {
+      background: #6d4a2f;
+      color: #fff;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin: 18px 0 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+    }
+
+    th,
+    td {
+      border: 1px solid #d8c7b5;
+      padding: 10px;
+      font-size: 16px;
+      text-align: left;
+    }
+
+    th {
+      background: #f1e7d9;
+    }
+
+    .signature-box {
+      border: 1px solid #cdbda8;
+      border-radius: 10px;
+      background: #fffdf8;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 180px;
+      display: block;
+      touch-action: none;
+      background: #fffdf8;
+    }
+
+    .btn-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #7b5538;
+      color: #fff;
+    }
+
+    button.secondary {
+      background: #777;
+    }
+
+    .msg {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      font-size: 16px;
+    }
+
+    .msg.success {
+      display: block;
+      background: #e8f5e9;
+      color: #1b5e20;
+    }
+
+    .msg.error {
+      display: block;
+      background: #ffebee;
+      color: #b71c1c;
+    }
+
+    .hide-on-capture {
+      margin-top: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div id="captureArea" class="receipt">
+      <h1>丰云世紀電子提貨單</h1>
+
+      <div class="info">
+        <div><strong>訂單時間：</strong><span id="orderTime"></span></div>
+        <div><strong>提貨人姓名：</strong><span id="name"></span></div>
+        <div><strong>手機號碼：</strong><span id="phone"></span></div>
+        <div><strong>取貨方式：</strong>自取</div>
+      </div>
+
+      <div class="section-title">出貨明細</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>產品名稱</th>
+            <th>數量</th>
+          </tr>
+        </thead>
+        <tbody id="productBody"></tbody>
+      </table>
+
+      <div class="section-title">電子簽名</div>
+
+      <div class="signature-box">
+        <canvas id="signatureCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="btn-row hide-on-capture">
+      <button class="secondary" onclick="clearSignature()">清除簽名</button>
+      <button id="submitBtn" onclick="submitPickup()">送出提貨單</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <form id="uploadForm" method="post" action="https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec" target="hiddenFrame" style="display:none;">
+    <input type="hidden" name="action" value="uploadPickupImage">
+    <input type="hidden" name="password" id="formPassword">
+    <input type="hidden" name="rowNumber" id="formRowNumber">
+    <input type="hidden" name="imageBase64" id="formImageBase64">
+  </form>
+
+  <iframe name="hiddenFrame" style="display:none;"></iframe>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyArI_EvtOmrci-2PQxLPaXeyDL8BiackZxt4U1YgdqOL2PTQWDsvezlQpteJGQd0lc/exec';
+    const ADMIN_PASSWORD = localStorage.getItem('fengyun_admin_password') || '8888';
+
+    const PRODUCTS = [
+      '樟芝褐藻王',
+      '百益菌',
+      '蓉益循',
+      '塘益淨',
+      '白樺茸',
+      '視益明',
+      '固益伸',
+      '武澤罡',
+      '丰益寶',
+      '活氧肽',
+      '丰益醇'
+    ];
+
+    let rowNumber = '';
+    let isSigned = false;
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || '';
+    }
+
+    function jsonp(url, callbackName) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        const cb = callbackName || ('cb_' + Date.now() + '_' + Math.floor(Math.random() * 9999));
+
+        window[cb] = function(data) {
+          resolve(data);
+          delete window[cb];
+          script.remove();
+        };
+
+        script.onerror = function() {
+          reject(new Error('連線失敗'));
+          delete window[cb];
+          script.remove();
+        };
+
+        script.src = url + '&callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
+    function showMsg(type, text) {
+      const msg = document.getElementById('msg');
+      msg.className = 'msg ' + type;
+      msg.textContent = text;
+    }
+
+    async function loadOrder() {
+      rowNumber = getParam('row');
+
+      if (!rowNumber) {
+        showMsg('error', '缺少訂單資料列');
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.set('action', 'getPickupOrder');
+      params.set('password', ADMIN_PASSWORD);
+      params.set('rowNumber', rowNumber);
+
+      try {
+        const data = await jsonp(GAS_URL + '?' + params.toString());
+
+        if (!data.success) {
+          showMsg('error', data.message || '讀取失敗');
+          return;
+        }
+
+        const order = data.order;
+
+        document.getElementById('orderTime').textContent = order['訂單時間'] || '';
+        document.getElementById('name').textContent = order['訂購人姓名'] || '';
+        document.getElementById('phone').textContent = order['手機號碼'] || '';
+
+        const tbody = document.getElementById('productBody');
+        tbody.innerHTML = '';
+
+        PRODUCTS.forEach(product => {
+          if (order[product]) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${product}</td><td>${order[product]}</td>`;
+            tbody.appendChild(tr);
+          }
+        });
+
+      } catch (err) {
+        showMsg('error', String(err.message || err));
+      }
+    }
+
+    function setupSignature() {
+      const canvas = document.getElementById('signatureCanvas');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#222';
+      }
+
+      resizeCanvas();
+
+      let drawing = false;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+
+        if (e.touches && e.touches.length > 0) {
+          return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+          };
+        }
+
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      function start(e) {
+        e.preventDefault();
+        drawing = true;
+        isSigned = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+
+      function end(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        drawing = false;
+      }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      canvas.addEventListener('mouseup', end);
+      canvas.addEventListener('mouseleave', end);
+
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      canvas.addEventListener('touchend', end, { passive: false });
+    }
+
+    function clearSignature() {
+      const canvas = document.getElementById('signatureCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      isSigned = false;
+    }
+
+    async function submitPickup() {
+      if (!isSigned) {
+        showMsg('error', '請先完成電子簽名');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '提貨單儲存中...';
+      showMsg('success', '提貨單儲存中，請稍候');
+
+      try {
+        const canvas = await html2canvas(document.getElementById('captureArea'), {
+          scale: 2,
+          backgroundColor: '#ffffff'
+        });
+
+        const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
+
+        document.getElementById('formPassword').value = ADMIN_PASSWORD;
+        document.getElementById('formRowNumber').value = rowNumber;
+        document.getElementById('formImageBase64').value = imageBase64;
+
+        document.getElementById('uploadForm').submit();
+
+        showMsg('success', '提貨單已送出，請回後台確認圖片網址是否已回填');
+
+        setTimeout(function() {
+          btn.disabled = false;
+          btn.textContent = '送出提貨單';
+        }, 3000);
+
+      } catch (err) {
+        showMsg('error', String(err.message || err));
+        btn.disabled = false;
+        btn.textContent = '送出提貨單';
+      }
+    }
+
+    loadOrder();
+    setupSignature();
+  </script>
+</body>
+</html>
