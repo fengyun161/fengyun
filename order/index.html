@@ -264,19 +264,27 @@
       '丰益醇'
     ];
 
-    function initProducts() {
-      const wrap = document.getElementById('productList');
+function initProducts() {
+  const wrap = document.getElementById('productList');
 
-PRODUCTS.forEach(product => {
-  const input = document.getElementById('qty_' + product);
-  const qty = input ? Number(input.value || 0) : 0;
+  wrap.innerHTML = '';
 
-  if (qty > 0) {
-    params.set(product, qty);
-    hasQty = true;
-  }
-});
-    }
+  PRODUCTS.forEach(product => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+
+    row.innerHTML = `
+      <div class="product-name">${product}</div>
+      <div class="qty-control">
+        <button type="button" class="qty-btn" onclick="changeQty('${product}', -1)">−</button>
+        <input type="text" class="qty-input" id="qty_${product}" value="" inputmode="numeric" pattern="[0-9]*" oninput="manualQty('${product}')">
+        <button type="button" class="qty-btn" onclick="changeQty('${product}', 1)">＋</button>
+      </div>
+    `;
+
+    wrap.appendChild(row);
+  });
+}
 
     function manualQty(product) {
       const input = document.getElementById('qty_' + product);
