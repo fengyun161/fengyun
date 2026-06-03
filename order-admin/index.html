@@ -655,8 +655,11 @@ async function saveOrder(rowNumber) {
     });
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.register('https://fyc100.com/order-admin/sw.js', {
+      scope: 'https://fyc100.com/order-admin/'
+    });
   }
+    
 </script>
   
 </body>
