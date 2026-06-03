@@ -527,9 +527,15 @@ function renderOrders() {
         </div>
       </td>
 
-      <td>
-        <button onclick="saveOrder(${rowNumber})">儲存</button>
-      </td>
+<td>
+  <button onclick="saveOrder(${rowNumber})">儲存</button>
+  ${
+    (order['收件地址'] || '') === '自取'
+      ? `<br><button style="margin-top:6px;" onclick="openPickup(${rowNumber})">提貨</button>`
+      : ''
+  }
+</td>    
+
     `;
 
     tbody.appendChild(tr);
@@ -618,6 +624,11 @@ async function saveOrder(rowNumber) {
   }
 }
 
+function openPickup(rowNumber) {
+  const url = 'https://fyc100.com/pickup.html?row=' + encodeURIComponent(rowNumber);
+  window.open(url, '_blank');
+}
+    
     function normalizeDate(text) {
       if (!text) return '';
 
