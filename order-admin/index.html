@@ -473,14 +473,29 @@ function renderOrders() {
 
     const invoiceNo = order['發票號碼'] || '';
     const invoiceUrl = order['發票連結'] || '';
+    const pickupImageUrl = order['提貨單圖片網址'] || '';
 
     const shippingStatus = order['出貨狀態'] || '未寄出';
+    const address = order['收件地址'] || '';
 
     tr.innerHTML = `
       <td>${escapeHtml(order['訂單時間'] || '')}</td>
       <td>${escapeHtml(order['訂購人姓名'] || '')}</td>
       <td>${escapeHtml(order['手機號碼'] || '')}</td>
-      <td>${escapeHtml(order['收件地址'] || '')}</td>
+
+      <td>
+        ${escapeHtml(address)}
+        ${
+          address === '自取'
+            ? (
+                pickupImageUrl
+                  ? `<button style="margin-left:6px;" onclick="window.open('${escapeAttr(pickupImageUrl)}', '_blank')">簽收單</button>`
+                  : `<button style="margin-left:6px;" onclick="openPickup(${rowNumber})">提貨</button>`
+              )
+            : ''
+        }
+      </td>
+
       <td class="product-list">${productsHtml || '-'}</td>
 
       <td>
@@ -527,15 +542,9 @@ function renderOrders() {
         </div>
       </td>
 
-<td>
-  <button onclick="saveOrder(${rowNumber})">儲存</button>
-  ${
-    (order['收件地址'] || '') === '自取'
-      ? `<br><button style="margin-top:6px;" onclick="openPickup(${rowNumber})">提貨</button>`
-      : ''
-  }
-</td>    
-
+      <td>
+        <button onclick="saveOrder(${rowNumber})">儲存</button>
+      </td>
     `;
 
     tbody.appendChild(tr);
