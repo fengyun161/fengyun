@@ -2,7 +2,7 @@
   "id": "fengyun-order",
   "name": "丰云世紀訂購表",
   "short_name": "丰云訂購",
-  "start_url": "./index.html",
+  "start_url": "./order.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f6f1e8",
